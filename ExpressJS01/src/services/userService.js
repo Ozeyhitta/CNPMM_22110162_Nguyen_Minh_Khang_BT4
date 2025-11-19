@@ -128,7 +128,11 @@ const loginService = async (email, password) => {
   if (!match) return { EC: 1, EM: "Sai mật khẩu" };
 
   const token = jwt.sign(
-    { email: user.email, name: user.name },
+    { 
+      email: user.email, 
+      name: user.name,
+      role: user.role || "user" // Thêm role vào JWT token
+    },
     process.env.JWT_SECRET,
     { expiresIn: "1d" }
   );
@@ -137,7 +141,12 @@ const loginService = async (email, password) => {
     EC: 0,
     EM: "Đăng nhập thành công",
     access_token: token,
-    user,
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role || "user"
+    },
   };
 };
 

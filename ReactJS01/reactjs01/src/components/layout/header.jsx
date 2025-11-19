@@ -3,6 +3,7 @@ import {
   UsergroupAddOutlined,
   HomeOutlined,
   SettingOutlined,
+  ShoppingOutlined,
 } from "@ant-design/icons";
 import { Menu } from "antd";
 import { Link, useNavigate } from "react-router-dom";
@@ -18,6 +19,12 @@ const Header = () => {
       label: <Link to="/">Home Page</Link>,
       key: "home",
       icon: <HomeOutlined />,
+    },
+
+    {
+      label: <Link to="/products">Products</Link>,
+      key: "products",
+      icon: <ShoppingOutlined />,
     },
 
     ...(auth.isAuthenticated
@@ -47,6 +54,7 @@ const Header = () => {
                         user: {
                           email: "",
                           name: "",
+                          role: "",
                         },
                       });
                       navigate("/");

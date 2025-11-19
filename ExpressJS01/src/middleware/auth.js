@@ -76,11 +76,10 @@ const auth = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     req.user = {
-      email: decoded.email,
-      name: decoded.name,
+      email: decoded.email || "",
+      name: decoded.name || "",
+      role: decoded.role || "user", // Lấy role từ JWT token
     };
-
-    console.log(">>> Token verified:", decoded);
 
     next();
   } catch (err) {

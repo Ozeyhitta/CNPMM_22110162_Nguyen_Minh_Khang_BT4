@@ -33,15 +33,17 @@
 // };
 
 // module.exports = connection;
+require("dotenv").config();
 const { Sequelize } = require("sequelize");
 
 const sequelize = new Sequelize(
-  process.env.MYSQL_DB,
-  process.env.MYSQL_USER,
-  process.env.MYSQL_PASSWORD,
+  process.env.MYSQL_DB, // đổi DB_NAME → MYSQL_DB
+  process.env.MYSQL_USER, // đổi DB_USER → MYSQL_USER
+  process.env.MYSQL_PASSWORD, // đổi DB_PASSWORD → MYSQL_PASSWORD
   {
-    host: process.env.MYSQL_HOST,
+    host: process.env.MYSQL_HOST, // đổi DB_HOST → MYSQL_HOST
     dialect: "mysql",
+    port: 3306,
     logging: false,
   }
 );

@@ -11,6 +11,7 @@ import LoginPage from "./pages/login.jsx";
 import Forgot from "./pages/forgot.jsx";
 import ResetPage from "./pages/reset.jsx";
 import VerifyOTP from "./pages/verify-otp.jsx";
+import ProductsPage from "./pages/ProductList.jsx";
 import { AuthWrapper } from "./components/context/auth.context.jsx";
 
 const router = createBrowserRouter([
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
       {
         path: "user",
         element: <UserPage />,
+      },
+      {
+        path: "products", // 👈 THÊM ROUTE
+        element: <ProductsPage />,
       },
     ],
   },

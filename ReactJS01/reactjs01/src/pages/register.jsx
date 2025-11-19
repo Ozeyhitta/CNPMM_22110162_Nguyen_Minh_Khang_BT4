@@ -47,7 +47,10 @@ const RegisterPage = () => {
             <Form.Item
               label="Email"
               name="email"
-              rules={[{ required: true, message: "Please input your email!" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập email!" },
+                { type: "email", message: "Email không hợp lệ!" },
+              ]}
             >
               <Input />
             </Form.Item>
@@ -56,16 +59,48 @@ const RegisterPage = () => {
               label="Password"
               name="password"
               rules={[
-                { required: true, message: "Please input your password!" },
+                { required: true, message: "Vui lòng nhập mật khẩu!" },
+                { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự!" },
+                {
+                  pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/,
+                  message: "Mật khẩu phải có chữ và số!",
+                },
               ]}
             >
               <Input.Password />
             </Form.Item>
 
             <Form.Item
+              label="Nhập lại mật khẩu"
+              name="confirmPassword"
+              dependencies={["password"]}
+              hasFeedback
+              rules={[
+                { required: true, message: "Nhập lại mật khẩu!" },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue("password") === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error("Mật khẩu không khớp!"));
+                  },
+                }),
+              ]}
+            >
+              <Input.Password placeholder="Nhập lại mật khẩu..." />
+            </Form.Item>
+
+            <Form.Item
               label="Name"
               name="name"
-              rules={[{ required: true, message: "Please input your name!" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập tên!" },
+                { min: 2, message: "Tên phải có tối thiểu 2 ký tự!" },
+                {
+                  pattern: /^[A-Za-zÀ-ỹ\s]+$/,
+                  message: "Tên không được chứa số hoặc ký tự đặc biệt!",
+                },
+              ]}
             >
               <Input />
             </Form.Item>

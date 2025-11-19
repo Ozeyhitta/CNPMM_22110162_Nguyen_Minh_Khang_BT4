@@ -25,7 +25,7 @@ export default function ResetPage() {
     } catch (err) {
       notification.error({
         message: "RESET PASSWORD",
-        description: err?.message || "Lỗi xảy ra",
+        description: err?.response?.data?.message || "Lỗi xảy ra",
       });
     }
   };
@@ -37,16 +37,23 @@ export default function ResetPage() {
           <legend>Đặt lại mật khẩu</legend>
 
           <Form layout="vertical" onFinish={onFinish}>
+            {/* Mật khẩu mới */}
             <Form.Item
               label="Mật khẩu mới"
               name="password"
               rules={[
                 { required: true, message: "Vui lòng nhập mật khẩu mới!" },
+                { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự!" },
+                {
+                  pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/,
+                  message: "Mật khẩu phải bao gồm chữ và số!",
+                },
               ]}
             >
-              <Input.Password />
+              <Input.Password placeholder="Nhập mật khẩu mới" />
             </Form.Item>
 
+            {/* Xác nhận mật khẩu */}
             <Form.Item
               label="Xác nhận mật khẩu"
               name="confirmPassword"
@@ -63,10 +70,10 @@ export default function ResetPage() {
                 }),
               ]}
             >
-              <Input.Password />
+              <Input.Password placeholder="Nhập lại mật khẩu" />
             </Form.Item>
 
-            <Button type="primary" htmlType="submit" style={{ width: "100%" }}>
+            <Button type="primary" htmlType="submit" block>
               Đổi mật khẩu
             </Button>
           </Form>

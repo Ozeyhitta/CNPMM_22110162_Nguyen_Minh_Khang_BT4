@@ -11,6 +11,7 @@ export default function Forgot() {
   const onFinish = async ({ email }) => {
     try {
       setLoading(true);
+
       const res = await axios.post("/v1/api/forgot-password", { email });
 
       notification.success({
@@ -39,7 +40,10 @@ export default function Forgot() {
             <Form.Item
               label="Email"
               name="email"
-              rules={[{ required: true, message: "Vui lòng nhập email!" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập email!" },
+                { type: "email", message: "Email không hợp lệ!" },
+              ]}
             >
               <Input placeholder="Nhập email" />
             </Form.Item>
@@ -56,6 +60,7 @@ export default function Forgot() {
           </Form>
 
           <Divider />
+
           <Link to="/login">
             <ArrowLeftOutlined /> Quay lại đăng nhập
           </Link>
