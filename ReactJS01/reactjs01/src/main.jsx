@@ -12,6 +12,8 @@ import Forgot from "./pages/forgot.jsx";
 import ResetPage from "./pages/reset.jsx";
 import VerifyOTP from "./pages/verify-otp.jsx";
 import ProductsPage from "./pages/ProductList.jsx";
+import CategoriesPage from "./pages/Categories.jsx";
+import ProductsManagementPage from "./pages/ProductsManagement.jsx";
 import { AuthWrapper } from "./components/context/auth.context.jsx";
 
 const router = createBrowserRouter([
@@ -30,6 +32,14 @@ const router = createBrowserRouter([
       {
         path: "products", // 👈 THÊM ROUTE
         element: <ProductsPage />,
+      },
+      {
+        path: "categories",
+        element: <CategoriesPage />,
+      },
+      {
+        path: "products-management",
+        element: <ProductsManagementPage />,
       },
     ],
   },
@@ -57,9 +67,9 @@ const router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <AuthWrapper>
-      <RouterProvider router={router} />
-    </AuthWrapper>
-  </React.StrictMode>
+  // <React.StrictMode> - Disabled to fix component re-mounting issues
+  <AuthWrapper>
+    <RouterProvider router={router} />
+  </AuthWrapper>
+  // </React.StrictMode>
 );

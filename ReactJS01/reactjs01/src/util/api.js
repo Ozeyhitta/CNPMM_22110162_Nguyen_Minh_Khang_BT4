@@ -52,6 +52,18 @@ const deleteProductApi = (id) => {
   return axios.delete(URL_API);
 };
 
+const searchProductsApi = (keyword) => {
+  return axios.get(`/v1/api/products/search?q=${keyword}`);
+};
+
+export const filterProductsApi = (filters) => {
+  return axios
+    .get(`/v1/api/products/filter`, {
+      params: filters,
+    })
+    .then((res) => res.data);
+};
+
 // =========================
 // ADMIN USER MANAGEMENT APIs
 // =========================
@@ -93,6 +105,36 @@ const deleteUserApi = (id) => {
   return axios.delete(URL_API);
 };
 
+// =========================
+// CATEGORY APIs
+// =========================
+
+// Lấy danh sách danh mục
+const getCategoriesApi = () => {
+  return axios.get("/v1/api/categories");
+};
+
+// Lấy danh mục theo ID
+const getCategoryByIdApi = (id) => {
+  return axios.get(`/v1/api/categories/${id}`);
+};
+
+// Tạo danh mục mới (Admin only)
+const createCategoryApi = (name, description = "", thumbnail = "") => {
+  const data = { name, description, thumbnail };
+  return axios.post("/v1/api/categories", data);
+};
+
+// Cập nhật danh mục (Admin only)
+const updateCategoryApi = (id, data) => {
+  return axios.put(`/v1/api/categories/${id}`, data);
+};
+
+// Xóa danh mục (Admin only)
+const deleteCategoryApi = (id) => {
+  return axios.delete(`/v1/api/categories/${id}`);
+};
+
 export {
   createUserApi,
   loginApi,
@@ -108,4 +150,10 @@ export {
   updateUserApi,
   updateUserRoleApi,
   deleteUserApi,
+  searchProductsApi,
+  getCategoriesApi,
+  getCategoryByIdApi,
+  createCategoryApi,
+  updateCategoryApi,
+  deleteCategoryApi,
 };

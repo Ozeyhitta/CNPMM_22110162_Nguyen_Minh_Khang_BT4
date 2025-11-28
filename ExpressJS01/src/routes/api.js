@@ -1,38 +1,3 @@
-// const express = require("express");
-// const {
-//   createUser,
-//   handleLogin,
-//   getUser,
-//   getAccount,
-// } = require("../controllers/userController");
-
-// const {
-//   forgotPassword,
-//   resetPassword,
-// } = require("../controllers/auth.controller");
-
-// const auth = require("../middleware/auth");
-// const delay = require("../middleware/delay");
-
-// const routerAPI = express.Router();
-
-// // Test route
-// routerAPI.get("/", (req, res) => {
-//   return res.status(200).json("Hello world api");
-// });
-
-// // Register + Login
-// routerAPI.post("/register", createUser);
-// routerAPI.post("/login", handleLogin);
-
-// // Forgot + Reset password
-// routerAPI.post("/forgot-password", forgotPassword);
-// routerAPI.post("/check-otp", checkOTP);
-// routerAPI.post("/reset-password", resetPassword);
-
-// // Protected routes
-// routerAPI.get("/user", auth, getUser);
-// routerAPI.get("/account", auth, delay, getAccount);
 
 // module.exports = routerAPI;
 const express = require("express");
@@ -52,11 +17,22 @@ const {
 
 const {
   getProducts,
+  getAllProducts,
   getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
+  searchProducts,
+  filterProducts,
 } = require("../controllers/productController");
+
+const {
+  getCategories,
+  getCategoryById,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+} = require("../controllers/categoryController");
 
 const auth = require("../middleware/auth");
 const delay = require("../middleware/delay");
@@ -74,6 +50,11 @@ const {
   createProductValidation,
   updateProductValidation,
 } = require("../validation/product.validation");
+
+const {
+  createCategoryValidation,
+  updateCategoryValidation,
+} = require("../validation/category.validation");
 
 const {
   createUserValidation,
@@ -110,8 +91,16 @@ routerAPI.get("/", globalLimiter, (req, res) => {
 });
 
 // Product routes (Public - ai cũng xem được)
+routerAPI.get("/products/search", globalLimiter, searchProducts);
 routerAPI.get("/products", globalLimiter, getProductsValidation, getProducts);
+routerAPI.get("/all-products", globalLimiter, getAllProducts);
+routerAPI.get("/products/filter", globalLimiter, filterProducts);
+// Route with parameter must be last
 routerAPI.get("/products/:id", globalLimiter, getProductById);
+
+// Category routes (Public - ai cũng xem được)
+routerAPI.get("/categories", globalLimiter, getCategories);
+routerAPI.get("/categories/:id", globalLimiter, getCategoryById);
 
 // Register + Login (Public)
 routerAPI.post("/register", globalLimiter, registerValidation, createUser);
@@ -178,6 +167,33 @@ routerAPI.delete(
   auth,
   authorize("admin"),
   deleteProduct
+);
+
+// Category Admin routes (Admin only)
+routerAPI.post(
+  "/categories",
+  globalLimiter,
+  auth,
+  authorize("admin"),
+  createCategoryValidation,
+  createCategory
+);
+
+routerAPI.put(
+  "/categories/:id",
+  globalLimiter,
+  auth,
+  authorize("admin"),
+  updateCategoryValidation,
+  updateCategory
+);
+
+routerAPI.delete(
+  "/categories/:id",
+  globalLimiter,
+  auth,
+  authorize("admin"),
+  deleteCategory
 );
 
 // =========================

@@ -1,42 +1,56 @@
-const Product = require("../models/product");
+const {
+  getProductsService,
+  getAllProductsService,
+  getProductByIdService,
+  createProductService,
+  updateProductService,
+  deleteProductService,
+  searchProductsService,
+  filterProductsService,
+} = require("../services/productService");
 
 // =========================
-// GET PRODUCTS (Public - không cần auth)
+// GET PRODUCTS (Public - không cần auth) - With Pagination
 // =========================
 const getProducts = async (req, res) => {
   try {
     let { page = 1, limit = 12, category = "" } = req.query;
 
-    page = parseInt(page);
-    limit = parseInt(limit);
+    const result = await getProductsService(page, limit, category);
 
-    const offset = (page - 1) * limit;
-
-    const where = {};
-    if (category) {
-      where.category = category;
+    if (result.EC === 0) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(500).json(result);
     }
-
-    const { count, rows } = await Product.findAndCountAll({
-      where,
-      offset,
-      limit,
-      order: [["id", "ASC"]],
-    });
-
-    return res.status(200).json({
-      EC: 0,
-      EM: "Lấy danh sách sản phẩm thành công",
-      total: count,
-      page,
-      limit,
-      data: rows,
-    });
   } catch (error) {
-    console.error("Get products error:", error);
+    console.error("Get products controller error:", error);
     return res.status(500).json({
       EC: 1,
       EM: "Lỗi server khi lấy danh sách sản phẩm",
+    });
+  }
+};
+
+// =========================
+// GET ALL PRODUCTS (Public - không cần auth) - No Pagination
+// =========================
+const getAllProducts = async (req, res) => {
+  try {
+    let { category = "" } = req.query;
+
+    const result = await getAllProductsService(category);
+
+    if (result.EC === 0) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(500).json(result);
+    }
+  } catch (error) {
+    console.error("Get all products controller error:", error);
+    return res.status(500).json({
+      EC: 1,
+      EM: "Lỗi server khi lấy tất cả sản phẩm",
     });
   }
 };
@@ -48,22 +62,15 @@ const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const product = await Product.findByPk(id);
+    const result = await getProductByIdService(id);
 
-    if (!product) {
-      return res.status(404).json({
-        EC: 1,
-        EM: "Không tìm thấy sản phẩm",
-      });
+    if (result.EC === 0) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(404).json(result);
     }
-
-    return res.status(200).json({
-      EC: 0,
-      EM: "Lấy sản phẩm thành công",
-      data: product,
-    });
   } catch (error) {
-    console.error("Get product by id error:", error);
+    console.error("Get product by id controller error:", error);
     return res.status(500).json({
       EC: 1,
       EM: "Lỗi server",
@@ -76,22 +83,15 @@ const getProductById = async (req, res) => {
 // =========================
 const createProduct = async (req, res) => {
   try {
-    const { name, category, price, thumbnail } = req.body;
+    const result = await createProductService(req.body);
 
-    const product = await Product.create({
-      name,
-      category,
-      price,
-      thumbnail: thumbnail || "",
-    });
-
-    return res.status(201).json({
-      EC: 0,
-      EM: "Tạo sản phẩm thành công",
-      data: product,
-    });
+    if (result.EC === 0) {
+      return res.status(201).json(result);
+    } else {
+      return res.status(500).json(result);
+    }
   } catch (error) {
-    console.error("Create product error:", error);
+    console.error("Create product controller error:", error);
     return res.status(500).json({
       EC: 1,
       EM: "Lỗi server khi tạo sản phẩm",
@@ -105,32 +105,16 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, price, thumbnail } = req.body;
 
-    const product = await Product.findByPk(id);
+    const result = await updateProductService(id, req.body);
 
-    if (!product) {
-      return res.status(404).json({
-        EC: 1,
-        EM: "Không tìm thấy sản phẩm",
-      });
+    if (result.EC === 0) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(404).json(result);
     }
-
-    // Cập nhật các field được truyền vào
-    if (name !== undefined) product.name = name;
-    if (category !== undefined) product.category = category;
-    if (price !== undefined) product.price = price;
-    if (thumbnail !== undefined) product.thumbnail = thumbnail;
-
-    await product.save();
-
-    return res.status(200).json({
-      EC: 0,
-      EM: "Cập nhật sản phẩm thành công",
-      data: product,
-    });
   } catch (error) {
-    console.error("Update product error:", error);
+    console.error("Update product controller error:", error);
     return res.status(500).json({
       EC: 1,
       EM: "Lỗi server khi cập nhật sản phẩm",
@@ -145,23 +129,15 @@ const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const product = await Product.findByPk(id);
+    const result = await deleteProductService(id);
 
-    if (!product) {
-      return res.status(404).json({
-        EC: 1,
-        EM: "Không tìm thấy sản phẩm",
-      });
+    if (result.EC === 0) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(404).json(result);
     }
-
-    await product.destroy();
-
-    return res.status(200).json({
-      EC: 0,
-      EM: "Xóa sản phẩm thành công",
-    });
   } catch (error) {
-    console.error("Delete product error:", error);
+    console.error("Delete product controller error:", error);
     return res.status(500).json({
       EC: 1,
       EM: "Lỗi server khi xóa sản phẩm",
@@ -169,10 +145,75 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// =========================
+// FUZZY SEARCH PRODUCTS
+// =========================
+const searchProducts = async (req, res) => {
+  try {
+    const { q = "" } = req.query;
+
+    const result = await searchProductsService(q);
+
+    if (result.EC === 0) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(500).json(result);
+    }
+  } catch (error) {
+    console.error("Search products controller error:", error);
+    return res.status(500).json({
+      EC: 1,
+      EM: "Lỗi server khi tìm kiếm sản phẩm",
+    });
+  }
+};
+
+// =========================
+// FILTER PRODUCTS (multiple conditions)
+// =========================
+const filterProducts = async (req, res) => {
+  try {
+    const filters = req.query;
+
+    // Parse string values to numbers for proper filtering
+    const parsedFilters = {};
+    Object.keys(filters).forEach(key => {
+      const value = filters[key];
+      if (value !== undefined && value !== "") {
+        // Try to parse as number for numeric filters
+        if (['minPrice', 'maxPrice', 'minDiscount', 'maxDiscount', 'minViewCount', 'maxViewCount', 'minRating', 'maxRating'].includes(key)) {
+          parsedFilters[key] = Number(value);
+        } else {
+          parsedFilters[key] = value;
+        }
+      }
+    });
+
+    console.log("Parsed filters:", parsedFilters);
+
+    const result = await filterProductsService(parsedFilters);
+
+    if (result.EC === 0) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(500).json(result);
+    }
+  } catch (error) {
+    console.error("Filter products controller error:", error);
+    return res.status(500).json({
+      EC: 1,
+      EM: "Lỗi server khi lọc sản phẩm",
+    });
+  }
+};
+
 module.exports = {
   getProducts,
+  getAllProducts,
   getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
+  searchProducts,
+  filterProducts,
 };

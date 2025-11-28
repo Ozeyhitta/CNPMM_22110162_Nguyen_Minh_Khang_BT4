@@ -15,14 +15,18 @@ exports.updateProductValidation = validate({
     category: Joi.string().min(2).max(100).optional(),
     price: Joi.number().integer().min(0).optional(),
     thumbnail: Joi.string().uri().optional().allow(""),
+    discount: Joi.number().integer().min(0).max(100).optional(),
+    viewCount: Joi.number().integer().min(0).optional(),
+    rating: Joi.any().optional(),
+    stock: Joi.number().integer().min(0).optional(),
+    isActive: Joi.boolean().optional(),
   }),
 });
 
 exports.getProductsValidation = validate({
   query: Joi.object({
     page: Joi.number().integer().min(1).optional(),
-    limit: Joi.number().integer().min(1).max(100).optional(),
+    limit: Joi.number().integer().min(1).max(1000).optional(),
     category: Joi.string().optional().allow(""),
   }),
 });
-

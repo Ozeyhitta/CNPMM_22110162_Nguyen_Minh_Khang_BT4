@@ -4,6 +4,8 @@ import {
   HomeOutlined,
   SettingOutlined,
   ShoppingOutlined,
+  TagsOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import { Menu } from "antd";
 import { Link, useNavigate } from "react-router-dom";
@@ -27,12 +29,30 @@ const Header = () => {
       icon: <ShoppingOutlined />,
     },
 
-    ...(auth.isAuthenticated
+    // Admin menu
+    ...(auth.isAuthenticated && auth.user?.role === "admin"
       ? [
           {
-            label: <Link to="/user">Users</Link>,
-            key: "user",
-            icon: <UsergroupAddOutlined />,
+            label: "Quản lý",
+            key: "admin",
+            icon: <SettingOutlined />,
+            children: [
+              {
+                label: <Link to="/categories">Danh mục</Link>,
+                key: "categories",
+                icon: <TagsOutlined />,
+              },
+              {
+                label: <Link to="/products-management">Quản lý sản phẩm</Link>,
+                key: "products-management",
+                icon: <PlusOutlined />,
+              },
+              {
+                label: <Link to="/user">Users</Link>,
+                key: "user",
+                icon: <UsergroupAddOutlined />,
+              },
+            ],
           },
         ]
       : []),
