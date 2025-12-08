@@ -1,106 +1,3 @@
-// require("dotenv").config();
-// const User = require("../models/user");
-// const bcrypt = require("bcrypt");
-// const jwt = require("jsonwebtoken");
-
-// const saltRounds = 10;
-
-// // =========================
-// // CREATE USER
-// // =========================
-// const createUserService = async (name, email, password) => {
-//   try {
-//     // check user exist
-//     const user = await User.findOne({ email });
-//     if (user) {
-//       console.log(`>>> user exist, chọn 1 email khác: ${email}`);
-//       return null;
-//     }
-
-//     // hash user password
-//     const hashPassword = await bcrypt.hash(password, saltRounds);
-
-//     // save user to database
-//     let result = await User.create({
-//       name: name,
-//       email: email,
-//       password: hashPassword,
-//       role: "User",
-//     });
-
-//     return result;
-//   } catch (error) {
-//     console.log(error);
-//     return null;
-//   }
-// };
-
-// // =========================
-// // LOGIN
-// // =========================
-// const loginService = async (email, password) => {
-//   try {
-//     // fetch user by email
-//     const user = await User.findOne({ email });
-//     if (user) {
-//       // compare password
-//       const isMatchPassword = await bcrypt.compare(password, user.password);
-//       if (!isMatchPassword) {
-//         return {
-//           EC: 2,
-//           EM: "Email/Password không hợp lệ",
-//         };
-//       } else {
-//         // create an access token
-//         const payload = {
-//           email: user.email,
-//           name: user.name,
-//         };
-
-//         const access_token = jwt.sign(payload, process.env.JWT_SECRET, {
-//           expiresIn: process.env.JWT_EXPIRE,
-//         });
-
-//         return {
-//           EC: 0,
-//           access_token,
-//           user: {
-//             email: user.email,
-//             name: user.name,
-//           },
-//         };
-//       }
-//     } else {
-//       return {
-//         EC: 1,
-//         EM: "Email/Password không hợp lệ",
-//       };
-//     }
-//   } catch (error) {
-//     console.log(error);
-//     return null;
-//   }
-// };
-
-// // =========================
-// // GET USERS (bỏ password)
-// // =========================
-// const getUserService = async () => {
-//   try {
-//     let result = await User.find({}).select("-password");
-//     return result;
-//   } catch (error) {
-//     console.log(error);
-//     return null;
-//   }
-// };
-
-// module.exports = {
-//   createUserService,
-//   loginService,
-//   getUserService,
-// };
-
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -125,13 +22,14 @@ const loginService = async (email, password) => {
   if (!user) return { EC: 1, EM: "Email không tồn tại" };
 
   const match = await bcrypt.compare(password, user.password);
-  if (!match) return { EC: 1, EM: "Sai mật khẩu" };
+  if (!match) return { EC: 2, EM: "Sai mật khẩu" };
 
   const token = jwt.sign(
-    { 
-      email: user.email, 
+    {
+      id: user.id,
+      email: user.email,
       name: user.name,
-      role: user.role || "user" // Thêm role vào JWT token
+      role: user.role || "user", // Thêm role vào JWT token
     },
     process.env.JWT_SECRET,
     { expiresIn: "1d" }
@@ -145,7 +43,7 @@ const loginService = async (email, password) => {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role || "user"
+      role: user.role || "user",
     },
   };
 };

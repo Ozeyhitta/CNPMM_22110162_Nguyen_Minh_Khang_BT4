@@ -17,3 +17,8 @@ export const getProductsPage = async (page = 1, limit = 12, category = "") => {
   const res = await axios.get(query);
   return res.data;
 };
+
+export const checkFavoriteStatusApi = async (productId) => {
+  const res = await axios.get(`/v1/api/favorites/${productId}/status`);
+  return res.data; // hợp với cách bạn đang dùng
+};

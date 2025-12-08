@@ -64,15 +64,16 @@ export default function VerifyOTP() {
       });
 
       notification.success({
-        message: "OTP",
-        description: res.message,
+        message: "Xác minh OTP",
+        description: res.data?.EM || "Mã OTP hợp lệ",
       });
 
       navigate(`/reset-password?email=${email}&otp=${code}`);
     } catch (err) {
       notification.error({
-        message: "OTP",
-        description: err?.response?.data?.message || "OTP không đúng",
+        message: "Xác minh OTP",
+        description:
+          err?.response?.data?.EM || "Mã OTP không đúng hoặc đã hết hạn",
       });
     } finally {
       setLoading(false);
@@ -85,8 +86,8 @@ export default function VerifyOTP() {
       const res = await axios.post("/v1/api/forgot-password", { email });
 
       notification.success({
-        message: "OTP",
-        description: "OTP mới đã được gửi",
+        message: "Gửi lại OTP",
+        description: res.data?.EM || "Mã OTP mới đã được gửi đến email của bạn",
       });
 
       setCountdown(60); // reset countdown

@@ -44,9 +44,22 @@ const LoginPage = () => {
         navigate("/");
       } else {
         // Xử lý lỗi từ server
+        let errorMessage = "Đăng nhập thất bại";
+        let errorDescription =
+          res?.EM || "Vui lòng kiểm tra lại thông tin đăng nhập";
+
+        if (res?.EM === "Email không tồn tại") {
+          errorMessage = "Email không tồn tại";
+          errorDescription =
+            "Email này chưa được đăng ký. Vui lòng kiểm tra lại hoặc đăng ký tài khoản mới.";
+        } else if (res?.EM === "Sai mật khẩu") {
+          errorMessage = "Sai mật khẩu";
+          errorDescription = "Mật khẩu không đúng. Vui lòng thử lại.";
+        }
+
         notification.error({
-          message: "Đăng nhập thất bại",
-          description: res?.EM || "Email hoặc mật khẩu không đúng",
+          message: errorMessage,
+          description: errorDescription,
         });
       }
     } catch (error) {
@@ -54,7 +67,8 @@ const LoginPage = () => {
       console.error("Login error:", error);
       notification.error({
         message: "Lỗi đăng nhập",
-        description: error?.message || "Không thể kết nối đến server. Vui lòng thử lại!",
+        description:
+          error?.message || "Không thể kết nối đến server. Vui lòng thử lại!",
       });
     }
   };

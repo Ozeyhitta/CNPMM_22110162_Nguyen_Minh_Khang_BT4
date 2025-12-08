@@ -15,15 +15,16 @@ export default function Forgot() {
       const res = await axios.post("/v1/api/forgot-password", { email });
 
       notification.success({
-        message: "FORGOT PASSWORD",
-        description: res.message,
+        message: "Quên mật khẩu",
+        description: res.data?.message || "Đã gửi OTP đến email của bạn",
       });
 
       navigate(`/verify-otp?email=${email}`);
     } catch (err) {
       notification.error({
-        message: "FORGOT PASSWORD",
-        description: err?.response?.data?.message || "Lỗi xảy ra",
+        message: "Quên mật khẩu",
+        description:
+          err?.response?.data?.message || "Có lỗi xảy ra khi gửi email",
       });
     } finally {
       setLoading(false);

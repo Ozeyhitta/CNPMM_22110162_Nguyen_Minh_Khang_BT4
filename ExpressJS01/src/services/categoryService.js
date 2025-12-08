@@ -76,7 +76,7 @@ const createCategoryService = async (categoryData) => {
     console.error("Create category service error:", error);
 
     // Handle unique constraint error
-    if (error.name === 'SequelizeUniqueConstraintError') {
+    if (error.name === "SequelizeUniqueConstraintError") {
       return {
         EC: 1,
         EM: "Tên danh mục đã tồn tại",
@@ -122,7 +122,7 @@ const updateCategoryService = async (id, updateData) => {
     console.error("Update category service error:", error);
 
     // Handle unique constraint error
-    if (error.name === 'SequelizeUniqueConstraintError') {
+    if (error.name === "SequelizeUniqueConstraintError") {
       return {
         EC: 1,
         EM: "Tên danh mục đã tồn tại",

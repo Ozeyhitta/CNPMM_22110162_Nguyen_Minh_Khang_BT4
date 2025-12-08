@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Button,
@@ -10,27 +10,23 @@ import {
   Space,
 } from "antd";
 import ProductCard from "../components/ProductCard";
+import RecentlyViewedProducts from "../components/RecentlyViewedProducts";
 import {
-  getProductsApi,
   createProductApi,
   searchProductsApi,
   filterProductsApi,
   getCategoriesApi,
 } from "../util/api";
-import { AuthContext } from "../components/context/auth.context";
 import "../styles/product.css";
 import { Select } from "antd";
 
 export default function ProductList() {
-  const { auth } = useContext(AuthContext);
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
-
-  const [isSearching, setIsSearching] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -44,54 +40,16 @@ export default function ProductList() {
   const [maxRating, setMaxRating] = useState("");
   const [isActiveFilter, setIsActiveFilter] = useState("");
   const [categories, setCategories] = useState([]);
-
-  // Kiểm tra xem user có phải admin không
-  const isAdmin = auth?.user?.role === "admin";
+  const [page, setPage] = useState(1); // Trạng thái trang hiện tại
 
   const initializedRef = useRef(false);
 
   // Đồng bộ ref với state
-  // Load tất cả products một lần
-  const loadProducts = async () => {
-    if (loading) return;
-
-    setLoading(true);
-
-    try {
-      // Sử dụng API mới để lấy tất cả products
-      const res = await fetch(`http://localhost:8080/v1/api/all-products`);
-
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-
-      const result = await res.json();
-
-      if (result.EC === 0) {
-        setProducts(result.data);
-        setHasMore(false); // Đã load hết tất cả
-      } else {
-        notification.error({
-          message: "Lỗi",
-          description: result.EM || "Không thể tải sản phẩm",
-        });
-      }
-    } catch (error) {
-      console.error("Lỗi khi tải sản phẩm:", error);
-      notification.error({
-        message: "Lỗi",
-        description: "Không thể tải sản phẩm",
-      });
-    }
-
-    setLoading(false);
-  };
 
   const handleSearch = async (keyword) => {
     const q = keyword.trim();
     if (!q) return resetSearch();
 
-    setIsSearching(true);
     setLoading(true);
 
     try {
@@ -122,11 +80,49 @@ export default function ProductList() {
 
     fetchCategories();
   }, []);
+  const loadProducts = async () => {
+    if (loading || !hasMore) return;
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(
+        `http://localhost:8080/v1/api/products?page=${page}&limit=12`
+      );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const result = await res.json();
+
+      if (result.EC === 0) {
+        setProducts((prevProducts) => [...prevProducts, ...result.data]);
+        setHasMore(result.data.length === 12); // Nếu dữ liệu nhận về ít hơn limit, hết sản phẩm
+        setPage((prevPage) => prevPage + 1); // Tăng page lên sau khi tải xong
+      } else {
+        notification.error({
+          message: "Lỗi",
+          description: result.EM || "Không thể tải sản phẩm",
+        });
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải sản phẩm:", error);
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể tải sản phẩm",
+      });
+    }
+
+    setLoading(false);
+  };
 
   const resetSearch = () => {
-    setIsSearching(false);
     setSearchValue(""); // Clear search input
-    loadProducts();
+    setProducts([]); // Clear current product list
+    setPage(1); // Reset page to 1
+    setHasMore(true); // Reset hasMore to true
+    loadProducts(); // Reload products from the beginning
   };
 
   // Load sản phẩm ban đầu khi component mount
@@ -206,8 +202,73 @@ export default function ProductList() {
     }
   };
 
+  const loadMoreProducts = async () => {
+    if (loading || !hasMore) return; // Nếu đang tải hoặc không còn sản phẩm để tải thì không làm gì
+
+    setLoading(true); // Bắt đầu tải dữ liệu mới
+
+    try {
+      const nextPage = page + 1; // Tăng số trang lên khi tải thêm
+      const res = await fetch(
+        `http://localhost:8080/v1/api/products?page=${nextPage}&limit=12`
+      );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const result = await res.json();
+
+      if (result.EC === 0) {
+        setProducts((prevProducts) => [...prevProducts, ...result.data]); // Thêm sản phẩm mới vào danh sách
+        setHasMore(result.data.length === 12); // Nếu trả về ít hơn 12 sản phẩm thì hết sản phẩm để load
+        setPage(nextPage); // Tăng số trang
+      } else {
+        notification.error({
+          message: "Lỗi",
+          description: result.EM || "Không thể tải sản phẩm",
+        });
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải thêm sản phẩm:", error);
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể tải thêm sản phẩm",
+      });
+    }
+
+    setLoading(false); // Kết thúc trạng thái tải
+  };
+
+  useEffect(() => {
+    const onScroll = () => {
+      // Kiểm tra khi người dùng cuộn đến gần cuối trang (cách 200px)
+      const scrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      // Nếu còn sản phẩm và không đang tải, và cách cuối trang 200px thì load thêm
+      if (
+        hasMore &&
+        !loading &&
+        scrollTop + windowHeight >= documentHeight - 200
+      ) {
+        loadMoreProducts();
+      }
+    };
+
+    // Thêm event listener khi component được render
+    window.addEventListener("scroll", onScroll);
+
+    // Cleanup khi component unmount
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [loading, hasMore]); // Điều kiện callback: chỉ khi loading hoặc hasMore thay đổi
+
   return (
-    <div style={{ padding: 20, height: "100vh", overflow: "auto" }}>
+    <div style={{ padding: 20, minHeight: "100vh" }}>
       <div
         style={{
           display: "flex",
@@ -218,9 +279,7 @@ export default function ProductList() {
       >
         <h2>Tất cả sản phẩm</h2>
 
-        {/* Bộ lọc và tìm kiếm */}
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          {/* 🔍 Ô tìm kiếm sản phẩm */}
           <Space.Compact style={{ width: 250 }}>
             <Input
               placeholder="Tìm sản phẩm..."
@@ -246,18 +305,21 @@ export default function ProductList() {
 
       <div className="grid">
         {products.map((item, index) => (
-          <ProductCard key={`${item.id}-${index}`} item={item} />
+          <ProductCard
+            key={`${item.id}-${index}`}
+            item={item}
+            showFavorite={true}
+          />
         ))}
       </div>
 
       {loading && <p style={{ textAlign: "center" }}>Đang tải sản phẩm...</p>}
 
-      {/* Ẩn thông báo "Hết sản phẩm rồi" để infinite scroll mượt mà */}
-      {/* {!hasMore && (
+      {!hasMore && !loading && (
         <p style={{ textAlign: "center", marginTop: 10 }}>
           Hết sản phẩm rồi 🎉
         </p>
-      )} */}
+      )}
 
       {/* Modal thêm sản phẩm */}
       {isModalOpen && (
@@ -349,6 +411,18 @@ export default function ProductList() {
         title="Lọc sản phẩm nâng cao"
         open={isFilterOpen}
         onCancel={() => setIsFilterOpen(false)}
+        width="90vw"
+        style={{
+          maxWidth: "500px",
+          minWidth: "320px",
+        }}
+        bodyStyle={{
+          maxHeight: "70vh",
+          overflowY: "auto",
+          padding: "16px 24px",
+        }}
+        centered
+        className="filter-modal"
         footer={[
           <Button
             key="reset"
@@ -416,6 +490,7 @@ export default function ProductList() {
         ]}
       >
         <Form layout="vertical">
+          {/* Category Filter */}
           <Form.Item label="Danh mục">
             <Select
               allowClear
@@ -431,90 +506,101 @@ export default function ProductList() {
             </Select>
           </Form.Item>
 
-          <Form.Item label="Giá thấp nhất">
-            <InputNumber
-              style={{ width: "100%" }}
-              value={minPrice}
-              onChange={setMinPrice}
-              min={0}
-            />
-          </Form.Item>
+          {/* Price Range - Side by side */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+            <Form.Item label="Giá từ">
+              <InputNumber
+                style={{ width: "100%" }}
+                value={minPrice}
+                onChange={setMinPrice}
+                min={0}
+                placeholder="0"
+              />
+            </Form.Item>
+            <Form.Item label="Giá đến">
+              <InputNumber
+                style={{ width: "100%" }}
+                value={maxPrice}
+                onChange={setMaxPrice}
+                min={0}
+                placeholder="Không giới hạn"
+              />
+            </Form.Item>
+          </div>
 
-          <Form.Item label="Giá cao nhất">
-            <InputNumber
-              style={{ width: "100%" }}
-              value={maxPrice}
-              onChange={setMaxPrice}
-              min={0}
-            />
-          </Form.Item>
+          {/* Discount Range - Side by side */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+            <Form.Item label="Giảm giá từ (%)">
+              <InputNumber
+                style={{ width: "100%" }}
+                value={minDiscount}
+                onChange={setMinDiscount}
+                min={0}
+                max={100}
+                placeholder="0"
+              />
+            </Form.Item>
+            <Form.Item label="Giảm giá đến (%)">
+              <InputNumber
+                style={{ width: "100%" }}
+                value={maxDiscount}
+                onChange={setMaxDiscount}
+                min={0}
+                max={100}
+                placeholder="100"
+              />
+            </Form.Item>
+          </div>
 
-          <Form.Item label="Giảm giá từ (%)">
-            <InputNumber
-              style={{ width: "100%" }}
-              value={minDiscount}
-              onChange={setMinDiscount}
-              min={0}
-              max={100}
-              placeholder="0"
-            />
-          </Form.Item>
+          {/* View Count Range - Side by side */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+            <Form.Item label="Lượt xem từ">
+              <InputNumber
+                style={{ width: "100%" }}
+                value={minViewCount}
+                onChange={setMinViewCount}
+                min={0}
+                placeholder="0"
+              />
+            </Form.Item>
+            <Form.Item label="Lượt xem đến">
+              <InputNumber
+                style={{ width: "100%" }}
+                value={maxViewCount}
+                onChange={setMaxViewCount}
+                min={0}
+                placeholder="Không giới hạn"
+              />
+            </Form.Item>
+          </div>
 
-          <Form.Item label="Giảm giá đến (%)">
-            <InputNumber
-              style={{ width: "100%" }}
-              value={maxDiscount}
-              onChange={setMaxDiscount}
-              min={0}
-              max={100}
-              placeholder="100"
-            />
-          </Form.Item>
+          {/* Rating Range - Side by side */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+            <Form.Item label="Đánh giá từ">
+              <InputNumber
+                style={{ width: "100%" }}
+                value={minRating}
+                onChange={setMinRating}
+                min={0}
+                max={5}
+                step={0.1}
+                placeholder="0.0"
+              />
+            </Form.Item>
+            <Form.Item label="Đánh giá đến">
+              <InputNumber
+                style={{ width: "100%" }}
+                value={maxRating}
+                onChange={setMaxRating}
+                min={0}
+                max={5}
+                step={0.1}
+                placeholder="5.0"
+              />
+            </Form.Item>
+          </div>
 
-          <Form.Item label="Lượt xem từ">
-            <InputNumber
-              style={{ width: "100%" }}
-              value={minViewCount}
-              onChange={setMinViewCount}
-              min={0}
-              placeholder="0"
-            />
-          </Form.Item>
-
-          <Form.Item label="Lượt xem đến">
-            <InputNumber
-              style={{ width: "100%" }}
-              value={maxViewCount}
-              onChange={setMaxViewCount}
-              min={0}
-              placeholder="1000"
-            />
-          </Form.Item>
-
-          <Form.Item label="Đánh giá từ">
-            <InputNumber
-              style={{ width: "100%" }}
-              value={minRating}
-              onChange={setMinRating}
-              min={0}
-              max={5}
-              step={0.1}
-              placeholder="0.0"
-            />
-          </Form.Item>
-
-          <Form.Item label="Đánh giá đến">
-            <InputNumber
-              style={{ width: "100%" }}
-              value={maxRating}
-              onChange={setMaxRating}
-              min={0}
-              max={5}
-              step={0.1}
-              placeholder="5.0"
-            />
-          </Form.Item>
-
+          {/* Status Filter */}
           <Form.Item label="Trạng thái">
             <Select
               allowClear
@@ -527,7 +613,73 @@ export default function ProductList() {
             </Select>
           </Form.Item>
         </Form>
+
+        {/* Responsive styles for filter modal */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            .filter-modal .ant-modal-content {
+              max-height: 90vh;
+            }
+
+            .filter-modal .ant-modal-body {
+              padding: 16px 24px;
+            }
+
+            /* Responsive grid for filter fields */
+            @media (max-width: 768px) {
+              .filter-modal.ant-modal {
+                width: 95vw !important;
+                max-width: none !important;
+                margin: 0 2.5vw;
+              }
+
+              .filter-modal .ant-modal-body {
+                padding: 12px 16px;
+                max-height: 70vh;
+              }
+
+              /* Stack grid items vertically on mobile */
+              .filter-modal div[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+              }
+
+              /* Make form items more compact on mobile */
+              .filter-modal .ant-form-item {
+                margin-bottom: 12px !important;
+              }
+
+              .filter-modal .ant-form-item-label {
+                padding-bottom: 4px !important;
+              }
+            }
+
+            @media (max-width: 480px) {
+              .filter-modal.ant-modal {
+                width: 98vw !important;
+                margin: 0 1vw;
+              }
+
+              .filter-modal .ant-modal-body {
+                padding: 8px 12px;
+              }
+
+              /* Make buttons stack vertically on very small screens */
+              .filter-modal .ant-modal-footer {
+                flex-direction: column;
+                gap: 8px;
+              }
+
+              .filter-modal .ant-modal-footer .ant-btn {
+                width: 100%;
+              }
+            }
+          `
+        }} />
       </Modal>
+
+      {/* Recently Viewed Products */}
+      <RecentlyViewedProducts limit={12} />
     </div>
   );
 }

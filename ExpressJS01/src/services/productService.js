@@ -18,29 +18,34 @@ const removeVietnameseTones = (str) => {
 // =========================
 const getProductsService = async (page = 1, limit = 12, category = "") => {
   try {
-    page = parseInt(page);
-    limit = parseInt(limit);
+    // Chuyển page và limit thành số nguyên và đảm bảo chúng hợp lệ
+    page = Math.max(1, parseInt(page)); // Đảm bảo page >= 1
+    limit = Math.max(1, parseInt(limit)); // Đảm bảo limit >= 1
 
     const offset = (page - 1) * limit;
 
+    // Tạo điều kiện tìm kiếm cho category nếu có
     const where = {};
     if (category) {
       where.category = category;
     }
 
+    // Sử dụng findAndCountAll để phân trang và lấy tổng số sản phẩm
     const { count, rows } = await Product.findAndCountAll({
       where,
       offset,
       limit,
-      order: [["id", "ASC"]],
+      order: [["id", "ASC"]], // Sắp xếp theo ID tăng dần (hoặc có thể tùy chỉnh)
     });
 
+    // Trả về kết quả phân trang, bao gồm tổng số sản phẩm và dữ liệu cho trang hiện tại
     return {
       EC: 0,
       EM: "Lấy danh sách sản phẩm thành công",
       total: count,
       page,
       limit,
+      totalPages: Math.ceil(count / limit), // Tính tổng số trang
       data: rows,
     };
   } catch (error) {
@@ -281,11 +286,22 @@ const filterProductsService = async (filters) => {
 
     // Parse filters properly
     const parsedFilters = {};
-    Object.keys(filters).forEach(key => {
+    Object.keys(filters).forEach((key) => {
       const value = filters[key];
       if (value !== undefined && value !== null && value !== "") {
         // Parse numeric values
-        if (['minPrice', 'maxPrice', 'minDiscount', 'maxDiscount', 'minViewCount', 'maxViewCount', 'minRating', 'maxRating'].includes(key)) {
+        if (
+          [
+            "minPrice",
+            "maxPrice",
+            "minDiscount",
+            "maxDiscount",
+            "minViewCount",
+            "maxViewCount",
+            "minRating",
+            "maxRating",
+          ].includes(key)
+        ) {
           const numValue = Number(value);
           if (!isNaN(numValue)) {
             parsedFilters[key] = numValue;
@@ -306,7 +322,7 @@ const filterProductsService = async (filters) => {
       maxViewCount,
       minRating,
       maxRating,
-      isActive
+      isActive,
     } = parsedFilters;
 
     const where = {};
@@ -317,10 +333,15 @@ const filterProductsService = async (filters) => {
     }
 
     // Price range filter
-    if ((minPrice !== undefined && minPrice !== "") || (maxPrice !== undefined && maxPrice !== "")) {
+    if (
+      (minPrice !== undefined && minPrice !== "") ||
+      (maxPrice !== undefined && maxPrice !== "")
+    ) {
       where.price = {};
-      if (minPrice !== undefined && minPrice !== "") where.price[Op.gte] = Number(minPrice);
-      if (maxPrice !== undefined && maxPrice !== "") where.price[Op.lte] = Number(maxPrice);
+      if (minPrice !== undefined && minPrice !== "")
+        where.price[Op.gte] = Number(minPrice);
+      if (maxPrice !== undefined && maxPrice !== "")
+        where.price[Op.lte] = Number(maxPrice);
     }
 
     // Discount range filter
@@ -349,11 +370,10 @@ const filterProductsService = async (filters) => {
       where.isActive = isActive === "true" || isActive === true;
     }
 
-
     // First get all products
     let products = await Product.findAll({
       where: category ? { category } : {},
-      order: [["id", "ASC"]]
+      order: [["id", "ASC"]],
     });
 
     // Manual filtering for range conditions
@@ -361,9 +381,13 @@ const filterProductsService = async (filters) => {
 
     if (minViewCount !== undefined) {
       console.log("Filtering by minViewCount:", minViewCount);
-      products = products.filter(product => {
+      products = products.filter((product) => {
         const viewCount = product.dataValues.viewCount;
-        console.log(`Product ${product.dataValues.id}: viewCount=${viewCount}, keep=${viewCount >= minViewCount}`);
+        console.log(
+          `Product ${product.dataValues.id}: viewCount=${viewCount}, keep=${
+            viewCount >= minViewCount
+          }`
+        );
         return viewCount >= minViewCount;
       });
     }

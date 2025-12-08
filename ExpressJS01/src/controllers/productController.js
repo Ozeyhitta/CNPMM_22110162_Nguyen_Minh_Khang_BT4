@@ -16,12 +16,13 @@ const getProducts = async (req, res) => {
   try {
     let { page = 1, limit = 12, category = "" } = req.query;
 
+    // Gọi service getProducts với các tham số phân trang
     const result = await getProductsService(page, limit, category);
 
     if (result.EC === 0) {
-      return res.status(200).json(result);
+      return res.status(200).json(result); // Trả về dữ liệu phân trang
     } else {
-      return res.status(500).json(result);
+      return res.status(500).json(result); // Trả về lỗi nếu có
     }
   } catch (error) {
     console.error("Get products controller error:", error);
@@ -177,11 +178,22 @@ const filterProducts = async (req, res) => {
 
     // Parse string values to numbers for proper filtering
     const parsedFilters = {};
-    Object.keys(filters).forEach(key => {
+    Object.keys(filters).forEach((key) => {
       const value = filters[key];
       if (value !== undefined && value !== "") {
         // Try to parse as number for numeric filters
-        if (['minPrice', 'maxPrice', 'minDiscount', 'maxDiscount', 'minViewCount', 'maxViewCount', 'minRating', 'maxRating'].includes(key)) {
+        if (
+          [
+            "minPrice",
+            "maxPrice",
+            "minDiscount",
+            "maxDiscount",
+            "minViewCount",
+            "maxViewCount",
+            "minRating",
+            "maxRating",
+          ].includes(key)
+        ) {
           parsedFilters[key] = Number(value);
         } else {
           parsedFilters[key] = value;

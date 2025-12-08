@@ -1,0 +1,19 @@
+# Database Configuration
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=
+MYSQL_DB=fullstack_nodejs
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-here
+
+# Email Configuration (for forgot password functionality)
+# Replace with your Gmail credentials
+EMAIL_USER=your-gmail@gmail.com
+EMAIL_PASSWORD=your-gmail-app-password
+
+# Note: To get Gmail App Password:
+# 1. Enable 2-factor authentication on your Google account
+# 2. Go to Google Account settings > Security > App passwords
+# 3. Generate a new app password for "Mail"
+# 4. Use that 16-character password (without spaces) as EMAIL_PASSWORD

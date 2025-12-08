@@ -1,45 +1,3 @@
-// require("dotenv").config();
-// const jwt = require("jsonwebtoken");
-
-// const auth = (req, res, next) => {
-//   // Các route không cần xác thực
-//   const white_lists = ["/", "/register", "/login"];
-
-//   if (white_lists.find((item) => "/v1/api" + item === req.originalUrl)) {
-//     return next();
-//   }
-
-//   // Kiểm tra token có trong header không
-//   if (req.headers?.authorization?.split(" ")?.[1]) {
-//     const token = req.headers.authorization.split(" ")[1];
-
-//     try {
-//       // Verify token
-//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-//       req.user = {
-//         email: decoded.email,
-//         name: decoded.name,
-//         createdBy: "hoidanit",
-//       };
-
-//       console.log(">>> check token:", decoded);
-
-//       return next();
-//     } catch (error) {
-//       return res.status(401).json({
-//         message: "Token bị hết hạn/hoặc không hợp lệ",
-//       });
-//     }
-//   } else {
-//     return res.status(401).json({
-//       message: "Bạn chưa truyền Access Token ở header/Hoặc token bị hết hạn",
-//     });
-//   }
-// };
-
-// module.exports = auth;
-
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 
@@ -51,6 +9,7 @@ const auth = (req, res, next) => {
     "/forgot-password",
     "/check-otp",
     "/reset-password",
+    "/products/recently-viewed",
   ];
 
   // Nếu request đang vào API không cần auth → cho qua
@@ -62,13 +21,15 @@ const auth = (req, res, next) => {
   const authorization = req.headers?.authorization;
   if (!authorization)
     return res.status(401).json({
-      message: "Thiếu Access Token trong header",
+      EC: 1,
+      EM: "Người dùng chưa đăng nhập",
     });
 
   const token = authorization.split(" ")[1];
   if (!token)
     return res.status(401).json({
-      message: "Token không hợp lệ",
+      EC: 1,
+      EM: "Người dùng chưa đăng nhập",
     });
 
   try {
@@ -76,6 +37,7 @@ const auth = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     req.user = {
+      id: decoded.id,
       email: decoded.email || "",
       name: decoded.name || "",
       role: decoded.role || "user", // Lấy role từ JWT token
@@ -83,10 +45,38 @@ const auth = (req, res, next) => {
 
     next();
   } catch (err) {
+    console.log("JWT verification failed:", err.message);
     return res.status(401).json({
-      message: "Token hết hạn hoặc không hợp lệ",
+      EC: 1,
+      EM: "Người dùng chưa đăng nhập",
     });
   }
 };
 
-module.exports = auth;
+// Optional auth middleware - lấy user info nếu có token, không bắt buộc
+const optionalAuth = (req, res, next) => {
+  const authorization = req.headers?.authorization;
+  if (authorization) {
+    const token = authorization.split(" ")[1];
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = {
+          id: decoded.id,
+          email: decoded.email || "",
+          name: decoded.name || "",
+          role: decoded.role || "user",
+        };
+      } catch (error) {
+        // Token invalid, ignore and continue without user info
+        console.log("Invalid token in optional auth:", error.message);
+      }
+    }
+  }
+  next();
+};
+
+module.exports = {
+  auth,
+  optionalAuth,
+};

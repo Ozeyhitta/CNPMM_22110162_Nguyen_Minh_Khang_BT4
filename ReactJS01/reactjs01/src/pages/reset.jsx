@@ -17,15 +17,16 @@ export default function ResetPage() {
       });
 
       notification.success({
-        message: "RESET PASSWORD",
-        description: res.message,
+        message: "Đặt lại mật khẩu",
+        description: res.data?.EM || "Mật khẩu đã được đặt lại thành công",
       });
 
       navigate("/login");
     } catch (err) {
       notification.error({
-        message: "RESET PASSWORD",
-        description: err?.response?.data?.message || "Lỗi xảy ra",
+        message: "Đặt lại mật khẩu",
+        description:
+          err?.response?.data?.EM || "Có lỗi xảy ra khi đặt lại mật khẩu",
       });
     }
   };

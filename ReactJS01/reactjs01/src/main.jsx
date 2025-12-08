@@ -12,8 +12,11 @@ import Forgot from "./pages/forgot.jsx";
 import ResetPage from "./pages/reset.jsx";
 import VerifyOTP from "./pages/verify-otp.jsx";
 import ProductsPage from "./pages/ProductList.jsx";
+import ProductDetailPage from "./pages/ProductDetail.jsx";
+import FavoritesPage from "./pages/FavoritesPage.jsx";
 import CategoriesPage from "./pages/Categories.jsx";
 import ProductsManagementPage from "./pages/ProductsManagement.jsx";
+import PaymentPage from "./pages/payment.jsx";
 import { AuthWrapper } from "./components/context/auth.context.jsx";
 
 const router = createBrowserRouter([
@@ -34,12 +37,24 @@ const router = createBrowserRouter([
         element: <ProductsPage />,
       },
       {
+        path: "products/:productId",
+        element: <ProductDetailPage />,
+      },
+      {
+        path: "favorites",
+        element: <FavoritesPage />,
+      },
+      {
         path: "categories",
         element: <CategoriesPage />,
       },
       {
         path: "products-management",
         element: <ProductsManagementPage />,
+      },
+      {
+        path: "payment",
+        element: <PaymentPage />,
       },
     ],
   },
